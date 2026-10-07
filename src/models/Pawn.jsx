@@ -1,4 +1,4 @@
-import { PieceType } from "../constants";
+import { initialBlackPawnRank, initialWhitePawnRank, PieceType, TeamType } from "../constants";
 import { Position } from "./Position";
 import { Piece } from "./piece";
 
@@ -56,11 +56,60 @@ export class Pawn extends Piece {
             )
         );
 
-        // There is also "en passant" moves TODO
+        
 
         possiblePawnMoves = possiblePawnMoves.concat(inBoundsPossiblePawnEatMoves);
 
         this.possibleMoves = possiblePawnMoves;
+    }
+
+    calculateEnPassantMoves(pieces, lastMove) {
+        // There is also "en passant" moves TODO
+        if (!lastMove) return;
+        let possiblePawnEnPassantMoves = [];
+        if ((this.position.y - (3 * this.team) === initialWhitePawnRank || this.position.y - (3 * this.team) === initialBlackPawnRank) && this.isFirstMove === false) {
+            let possibleEnPassantPositions = [
+                new Position(this.position.x - 1, this.position.y),
+                new Position(this.position.x + 1, this.position.y)
+            ];
+
+            for (const pPos of possibleEnPassantPositions) {
+                let opPiece = pieces.find(p => 
+                    p.position.equals(pPos) &&
+                    p.position.equals(lastMove) &&
+                    p.team !== this.team &&
+                    p instanceof Pawn &&
+                    p.isFirstMove &&
+                    (p.position.y - (2 * p.team) === initialBlackPawnRank || 
+                    p.position.y - (2 * p.team) === initialWhitePawnRank)
+                );
+
+                if (opPiece) possiblePawnEnPassantMoves.push(new Position(pPos.x, pPos.y + (1 * this.team)));
+            }
+            
+        }
+        // if (this.team === TeamType.BLACK && this.position.y + 3 === initialBlackPawnRank && this.isFirstMove === false) {
+        //     let possibleEnPassantPositions = [
+        //         new Position(this.position.x - 1, this.position.y),
+        //         new Position(this.position.x + 1, this.position.y)
+        //     ];
+
+        //     for (const pPos of possibleEnPassantPositions) {
+        //         let opPiece = pieces.find(p => 
+        //             p.position.equals(pPos) &&
+        //             p.position.equals(lastMove) &&
+        //             p.team !== this.team &&
+        //             p instanceof Pawn &&
+        //             p.isFirstMove &&
+        //             p.position.y - 2 === initialWhitePawnRank
+        //         );
+
+        //         if (opPiece) possiblePawnEnPassantMoves.push(new Position(pPos.x, pPos.y + 1));
+        //     }
+            
+        // }
+
+        this.possibleMoves = this.possibleMoves.concat(possiblePawnEnPassantMoves);
     }
 
     getPossibleMoves() {

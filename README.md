@@ -25,11 +25,11 @@ This is a prototype of a Chess game written in React.js.
 
 - [x] Display board
 - [x] Display pieces
-- [ ] Calculate possible moves:
+- [x] Calculate possible moves:
     - [x] Calculate moves within boundaries
     - [x] Calculate overtake moves (eat moves)
     - [x] Calculate castling moves
-    - [ ] Calculate "en passant" moves (in passing)
+    - [x] Calculate "en passant" moves (in passing)
     - [x] Don't allow moves over other pieces (except Knight)
     - [x] Don't allow moves that place the playing team's King in check
     - [x] Don't allow moves that will lead to checkmate when the King is in check
@@ -37,7 +37,7 @@ This is a prototype of a Chess game written in React.js.
 - [ ] Move pieces:
     - [x] If overtake move remove opponent piece
     - [x] Do castling moves correctly
-    - [ ] Do "en passant" moves correctly
+    - [x] Do "en passant" moves correctly
     - [ ] Play sound when playing a piece
 - [ ] Check for checkmate:
     - [x] Check if playing team doesn't have any possible moves

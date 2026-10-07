@@ -26,7 +26,7 @@ export class Piece {
     this.type = t;
   }
 
-  get getTeam() {
+  getTeam() {
     return this.team;
   }
 

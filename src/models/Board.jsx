@@ -12,6 +12,7 @@ export class Board {
     this.pieces = pieces;
     this.totalTurns = totalTurns;
     this.winningTeam = winningTeam;
+    this.lastMove = undefined;
   }
 
   get currentTeam() {
@@ -30,6 +31,9 @@ export class Board {
     // get all moves for all pieces in the board
     for (let piece of this.pieces) {
       piece.calculatePossibleMoves(this.pieces);
+      if (piece instanceof Pawn) {
+        piece.calculateEnPassantMoves(this.pieces, this.lastMove);
+      }
     }
 
     // check every piece's movements to see if they endanger their team's king
@@ -143,6 +147,7 @@ export class Board {
         piece.hasMoved = true;
         secondPiece.hasMoved = true;
 
+        this.lastMove = destination;
         this.totalTurns += 1;
 
         return;
@@ -155,12 +160,20 @@ export class Board {
 
     piece.position.setPosition(destination);
 
+    this.lastMove = destination;
+
     if (piece instanceof Pawn) {
       if (piece.isFirstMove === undefined) {
         piece.isFirstMove = true;
       } else if (piece.isFirstMove === true) {
         piece.isFirstMove = false;
       }
+
+      let rank = new Position(piece.position.x, piece.position.y - (1 * piece.team))
+      let enPassantEnemy = this.pieces.find(p => p.team !== this.currentTeam && p.position.equals(rank));
+
+      if (enPassantEnemy) this.pieces = this.pieces.filter(p => !p.position.equals(enPassantEnemy.position));
+
     } else if (piece instanceof Rook || piece instanceof King) {
       piece.hasMoved = true;
     }
