@@ -2,7 +2,6 @@ import { useState } from 'react'
 import './App.css'
 import { blackPawnPromotionRow, cols, initialBoard, PieceType, rows, TeamType, whitePawnPromotionRow } from './constants';
 import { Position } from './models/Position';
-import { Piece } from './models/piece';
 import { Pawn } from './models/Pawn';
 import { useRef } from 'react';
 
@@ -23,28 +22,105 @@ function App() {
   )
 }
 
-const Tile = ({ row, col, piece = undefined, pointerdown = undefined, highlighted = false }) => {
+const Draggable = ({children, onDragMove, onPointerDown = () => {}, onPointerUp = () => {}, onPointerMove = () => {}}) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const divRef = useRef(null);
+
+  const handleMove = (ev) => {
+    if (isDragging) onDragMove(ev);
+
+    onPointerMove(ev);
+  }
+
+  const handleUp = (ev) => {
+    setIsDragging(false);
+
+    onPointerUp(ev);
+  }
+
+  const handleDown = (ev) => {
+    ev.currentTarget.setPointerCapture(ev.pointerId);
+    setIsDragging(true);
+
+    onPointerDown(ev);
+  }
+
+  return (
+    <div ref={divRef} onPointerDown={handleDown} onPointerMove={handleMove} onPointerUp={handleUp} style={{pointerEvents: isDragging ? "none": "auto"}}>
+      {children}
+    </div>
+  )
+}
+
+const Tile = ({ row, col, piece = undefined, pointerdown = undefined, pointerup = undefined, pointermove = undefined, highlighted = false, newHighlighted = false }) => {
+  const [translate, setTranslate] = useState({x: 0, y: 0});
+  const [idDragging, setIsDragging] = useState(false);
+  
   let classname = ["size-14", "relative",
     (row + col) % 2 !== 0 ? "bg-white" : "bg-mist-700",
-    highlighted && 'before:absolute before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[" "] before:size-6 before:rounded-full before:bg-black/40'
+    idDragging ? 'z-50' : 'z-0',
+    highlighted && 'before:absolute before:left-1/2 before:top-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[" "] before:size-6 before:rounded-full before:bg-black/40',
+    newHighlighted && 'bg-amber-300/70'
   ].filter(Boolean).join(' ');
 
   let position = rows[row] + cols[col];
 
   const onPointerDown = (ev) => {
-
+    ev.preventDefault();
+    setIsDragging(true);
     pointerdown(row, col);
   }
 
-  const onPointerMove = (ev) => {
+  const onDragMove = (ev) => {
+    setTranslate(prev => ({
+      x: prev.x + ev.movementX,
+      y: prev.y + ev.movementY
+    }));
+  }
 
+  const onPointerUp = (ev) => {
+    setIsDragging(false);
+    // Get the Tile component under the user mouse
+    const newTile = document.elementFromPoint(
+      ev.clientX,
+      ev.clientY
+    )?.closest("[data-square]");
+
+    if (!newTile) {
+      // set translation to 0 so it is centered in the new square
+      setTranslate({
+        x: 0,
+        y: 0
+      });
+      return;
+    } 
+
+    let row = newTile.dataset.row - 0;
+    let col = newTile.dataset.col - 0;
+
+    // define piece position through passed method
+    pointerup(row, col)
+
+    // set translation to 0 so it is centered in the new square
+    setTranslate({
+      x: 0,
+      y: 0
+    });
   }
 
 
   return (
-    <div data-square={position} data-row={row} data-col={col} className={classname} onPointerDown={onPointerDown}>
+    <div data-square={position} data-row={row} data-col={col} className={classname} /*onPointerDown={onPointerDown}*/ >
       {(piece) && (
-        <img src={piece.image} alt={`${piece.getTeam === TeamType.WHITE ? "White" : "Black"}+${piece.getType}`} />
+        <Draggable onDragMove={onDragMove} onPointerDown={onPointerDown} onPointerUp={onPointerUp} >
+          <img src={piece.image}
+            alt={`${piece.getTeam === TeamType.WHITE ? "White" : "Black"}+${piece.getType}`}
+            style={{
+              transform: `translateX(${translate.x}px) translateY(${translate.y}px)`,
+              pointerEvents: 'none'
+            }}
+          />
+        </Draggable>
       )}
     </div>
   )
@@ -91,46 +167,58 @@ const Board = () => {
     setPromotionPawn(null);
   }
 
-  const onSelectPiece = (row, col) => {
+  const onPutDownPiece = (row, col) => {
+    if (!selectedPiece) return;
+
+    console.log("I have a piece: ", selectedPiece);
+
+    // Set the position of the new tile
     let pos = new Position(col, row);
+    
+    if (selectedPiece.getPossibleMoves().some(m => m.equals(pos))) {
+      // Get the selected piece's position
+      let initialPos = selectedPiece.getPosition();
 
-    if (selectedPiece) {
-      if (selectedPiece.getPossibleMoves().some(m => m.equals(pos))) {
-        console.log("entered here")
-        let initialPos = selectedPiece.getPosition();
-        boardState.playMove(initialPos, pos);
-        // let clonedBoard = boardState.clone();
-        // clonedBoard.playMove(initialPos, pos);
-        // setBoardState(clonedBoard);
-        // setBoardState(() => {
-        //   let clonedBoard = boardState.clone();
-        //   clonedBoard.calculateAllMoves();
-        //   clonedBoard.playMove(initialPos, pos);
+      // Play the piece
+      setBoardState(() => {
+        let clonedBoard = boardState.clone();
+        clonedBoard.calculateAllMoves();
+        clonedBoard.playMove(initialPos, pos);
+        return clonedBoard;
+      });
 
-        //   return clonedBoard;
-        // });
-
-        if (selectedPiece instanceof Pawn) {
-          if (pos.y === whitePawnPromotionRow || pos.y === blackPawnPromotionRow) {
-            promotionModalRef.current.classList.remove('hidden');
-            setPromotionPawn(selectedPiece);
-          }
+      // If the piece played is Pawn, check if need promotion
+      if (selectedPiece instanceof Pawn) {
+        if (pos.y === whitePawnPromotionRow || pos.y === blackPawnPromotionRow) {
+          promotionModalRef.current.classList.remove('hidden');
+          setPromotionPawn(selectedPiece);
         }
       }
-      setSelectedPiece(null);
-    } else {
+    }
 
-      let piece = boardState.getPieceFromPosition(pos);
-      console.log(piece);
+    // Deselect piece
+    setSelectedPiece(null);
+  }
+
+  const onPickUpPiece = (row, col) => {
+    let pos = new Position(col, row);
+
+    setBoardState(() => {
+      const clonedBoard = boardState.clone();
+
+      clonedBoard.calculateAllMoves();
+
+      let piece = clonedBoard.getPieceFromPosition(pos);
+
       if (piece) {
-        piece.calculatePossibleMoves(boardState.pieces);
+        
         possibleMoves = piece.getPossibleMoves();
         console.log(possibleMoves)
 
         setSelectedPiece(piece);
       }
-    }
-    
+      return clonedBoard;
+    })
   }
 
   let board = [];
@@ -140,7 +228,7 @@ const Board = () => {
       let pos = new Position(j, i);
       let isHighlighted = selectedPiece ? selectedPiece.getPossibleMoves().some(m => m.equals(pos)) : false;
       let currentPiece = boardState.getPieceFromPosition(pos);
-      board.push(<Tile key={`${i}-${j}`} row={i} col={j} piece={currentPiece} pointerdown={onSelectPiece} highlighted={isHighlighted} />)
+      board.push(<Tile key={`${i}-${j}`} row={i} col={j} piece={currentPiece} pointerdown={onPickUpPiece} pointerup={onPutDownPiece} highlighted={isHighlighted} />)
     }
   }
 

@@ -3,9 +3,9 @@ import { Position } from "./Position";
 import { Piece } from "./piece";
 
 export class Pawn extends Piece {
-    constructor(position, team/*, possibleMoves = []*/) {
+    constructor(position, team, isFirstMove = undefined/*, possibleMoves = []*/) {
         super(position, PieceType.PAWN, team/*, possibleMoves*/)
-        this.isFirstMove = undefined;
+        this.isFirstMove = isFirstMove;
     }
 
     calculatePossibleMoves(pieces) {
@@ -119,7 +119,8 @@ export class Pawn extends Piece {
     clone() {
         return new Pawn(
             this.position.clone(),
-            this.team/*,
+            this.team,
+            this.isFirstMove/*,
             this.possibleMoves.map(m => m.clone())*/
         );
     }

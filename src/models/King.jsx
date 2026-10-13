@@ -43,6 +43,8 @@ export class King extends Piece {
             if (unmovedRooks.length > 0) {
                 unmovedRooks.forEach(rook => {
                     //       let isPossible = false;
+                    rook.calculatePossibleMoves(pieces);
+
                     let posQ = new Position(this.position.x - 1, this.position.y);
                     let posK = new Position(this.position.x + 1, this.position.y);
 

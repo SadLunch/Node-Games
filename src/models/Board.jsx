@@ -44,10 +44,33 @@ export class Board {
       for (let move of piece.possibleMoves) {
         const simulatedBoard = this.clone();
 
-        simulatedBoard.pieces = simulatedBoard.pieces.filter(p => !p.position.equals(move));
-
         const clonedPiece = simulatedBoard.pieces.find(p => p.position.equals(piece.position));
-        clonedPiece.position = move.clone();
+
+        if (clonedPiece instanceof King) {
+          let secondClonedPiece = simulatedBoard.pieces.find(p =>
+            p.position.equals(move) &&
+            p.team === clonedPiece.team &&
+            p instanceof Rook
+          );
+
+          if (secondClonedPiece) {
+            if (secondClonedPiece.position.x > clonedPiece.position.x) {
+              const newKingPos = new Position(clonedPiece.position.x + 2, clonedPiece.position.y);
+              const newRookPos = new Position(secondClonedPiece.position.x - 2, secondClonedPiece.position.y)
+              clonedPiece.position.setPosition(newKingPos);
+              secondClonedPiece.position.setPosition(newRookPos);
+            } else {
+              const newKingPos = new Position(clonedPiece.position.x - 2, clonedPiece.position.y);
+              const newRookPos = new Position(secondClonedPiece.position.x + 3, secondClonedPiece.position.y)
+              clonedPiece.position.setPosition(newKingPos);
+              secondClonedPiece.position.setPosition(newRookPos);
+            }
+          }
+        } else {
+          simulatedBoard.pieces = simulatedBoard.pieces.filter(p => !p.position.equals(move));
+          
+          clonedPiece.position.setPosition(move.clone());
+        }
 
         const clonedKing = simulatedBoard.pieces.find(p => p.type === PieceType.KING && p.team === simulatedBoard.currentTeam);
 
@@ -107,20 +130,20 @@ export class Board {
   playMove(initial, destination) {
     const piece = this.pieces.find(p => p.position.equals(initial) && p.possibleMoves.some(m => m.equals(destination)));
 
-    // if (!piece) {
-    //   console.error("playMove: piece not found", {
-    //     initial,
-    //     destination,
-    //     pieces: this.pieces.map(p => ({
-    //       type: p.type,
-    //       team: p.team,
-    //       position: p.position,
-    //       possibleMoves: p.possibleMoves
-    //     }))
-    //   });
+    if (!piece) {
+      console.error("playMove: piece not found", {
+        initial,
+        destination,
+        pieces: this.pieces.map(p => ({
+          type: p.type,
+          team: p.team,
+          position: p.position,
+          possibleMoves: p.possibleMoves
+        }))
+      });
 
-    //   return;
-    // }
+      return;
+    }
 
     if (piece.team !== this.currentTeam) return;
 

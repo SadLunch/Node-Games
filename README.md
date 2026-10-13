@@ -17,15 +17,20 @@ You can also try [the experimental native React Compiler support in plugin-react
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project. -->
+
+Handle drag logic here: https://javascript.plainenglish.io/how-to-make-a-simple-custom-usedrag-react-hook-6b606d45d353
+
 # React Chess
 
 This is a prototype of a Chess game written in React.js.
 
 ## TODO List
 
-- [x] Display board
-- [x] Display pieces
-- [x] Calculate possible moves:
+- Display:
+    - [x] Display board
+    - [x] Display pieces
+    - [x] Display possible moves
+- Possible moves:
     - [x] Calculate moves within boundaries
     - [x] Calculate overtake moves (eat moves)
     - [x] Calculate castling moves
@@ -33,17 +38,19 @@ This is a prototype of a Chess game written in React.js.
     - [x] Don't allow moves over other pieces (except Knight)
     - [x] Don't allow moves that place the playing team's King in check
     - [x] Don't allow moves that will lead to checkmate when the King is in check
-- [x] Display possible moves
-- [ ] Move pieces:
+- Piece Movement:
     - [x] If overtake move remove opponent piece
     - [x] Do castling moves correctly
     - [x] Do "en passant" moves correctly
     - [ ] Play sound when playing a piece
-- [ ] Check for checkmate:
+    - [x] Add grab and drop action to pieces
+    - [ ] Convert moves to chess notation
+- Checkmate:
     - [x] Check if playing team doesn't have any possible moves
     - [ ] Play sound on checkmate (depends on win or loss, maybe)
-- [ ] Create game in database on game start
-- [ ] Convert moves to chess notation
-- [ ] Send moves in chess notation to backend database
-- [ ] Add multiplayer to chess game (Websockets)
-- [ ] Make UI more visually appealing
+- Backend:
+    - [ ] Create game in database on game start
+    - [ ] Send moves in chess notation to backend database
+    - [ ] Add multiplayer to chess game (Websockets)
+- UI:
+    - [ ] Make UI more visually appealing
